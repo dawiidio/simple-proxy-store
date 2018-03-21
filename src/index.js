@@ -46,7 +46,7 @@ const runSubscribers = ({proxy, key, value, storeObjectKey, oldValue}) => {
   const subscribersToRun = subscribers[storeObjectKey];
 
   if (subscribersToRun && subscribersToRun.length)
-    subscribersToRun.forEach(subscriber => subscriber(key, value, oldValue))
+    subscribersToRun.forEach(subscriber => subscriber({key, value, oldValue, proxy, storeObjectKey}))
 };
 
 /**
@@ -75,6 +75,11 @@ export const createStore = (store, ...middlewares) => {
 
       const proxyDefinition = {
         set: (currentTarget, key, value) => {
+          if(key.startsWith('__')) {
+            currentTarget[key] = value;
+            return true;
+          }
+
           const data = {
             proxy: proxyStore[storeObjectKey].proxy,
             key,
@@ -89,7 +94,7 @@ export const createStore = (store, ...middlewares) => {
           currentTarget[key] = value;
 
           return true;
-        },
+        }
       };
 
       return {
