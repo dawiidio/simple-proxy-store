@@ -112,6 +112,7 @@ export const createStore = (store, ...middlewares) => {
     }), {});
 
   return {
+    __store: proxyStore,
     get store() {
       return storeKeys
         .map(storeKey => {
