@@ -24,13 +24,8 @@ connection for React.
 Basic use cases
 ```js
 import {
-    subscribe,
     createStore
 } from 'simple-proxy-store';
-
-subscribe()((...args) => {
-  console.log(args);
-});
 
 const myStore = createStore({
   test : new class {
@@ -47,11 +42,14 @@ const myStore = createStore({
     }
   }
 });
+
+myStore.subscribe()((...args) => {
+  console.log(args);
+});
 ```
 
 ```js
 import {
-    subscribe,
     createStore
 } from 'simple-proxy-store';
 
@@ -75,7 +73,7 @@ class B {
     }
 }
 
-const myStore = createStore({
+const {subscribe, store} = createStore({
   a: new A(),
   b: new B()
 });
@@ -90,8 +88,8 @@ subscribe(['a'])((key, value, oldValue) => {
   console.log(`in store a value under key:${key} has changed from ${value} to ${oldValue}`);
 });
 
-myStore.a.setA();
-myStore.b.fetchData();
+store.a.setA();
+store.b.fetchData();
 
-myStore.a = 123;
+store.a = 123;
 ```

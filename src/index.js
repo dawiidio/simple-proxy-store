@@ -88,10 +88,11 @@ export const createStore = (store, ...middlewares) => {
             oldValue: currentTarget[key]
           };
 
+          currentTarget[key] = value;
+          proxyStore[storeObjectKey].oldTarget = {...currentTarget};
+
           runSubscribers(data);
           runRootSubscribers(data);
-
-          currentTarget[key] = value;
 
           return true;
         }
@@ -101,6 +102,7 @@ export const createStore = (store, ...middlewares) => {
         [storeObjectKey]: {
           proxy: new Proxy(target, proxyDefinition),
           target,
+          oldTarget: null
         }
       }
     })
