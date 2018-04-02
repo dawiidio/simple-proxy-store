@@ -24,8 +24,8 @@ connection for React.
 info object looks like: 
 ```js
 {
-  storeName, // {string} with store key
-  key, // {string} key indicate which value changed
+  storeName, // {string}  key indicate which store has updated
+  key, // {string} key indicate which value has changed
   value, // {any} new value
   oldValue, // {any} old value
 }
