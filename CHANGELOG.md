@@ -7,3 +7,8 @@ on how to keep old store rather than provide new one for comparison
 to subscribers. It's seems to be better solution and from now for
 all subscribers we provide new version of store, when old is still
 the same place for comparison
+### 1.0.6
+However new store will not be transferred to subscribers, only accurate information 
+about what and where has changed. All subscribe engine has been removed 
+and replaced by RxJS which helped in managing updates and reduced 
+the quantity of code

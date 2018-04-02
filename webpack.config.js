@@ -37,7 +37,8 @@ const config = {
     ]
   },
   plugins: [
-    new CleanWebpackPlugin(['lib'])
+    new CleanWebpackPlugin(['lib']),
+    new webpack.optimize.UglifyJsPlugin()
   ]
 };
 

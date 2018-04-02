@@ -1,67 +1,25 @@
-const ROOT_SUBSCRIBERS_KEY = 'root';
+import { Subject } from 'rxjs/Subject';
+import { filter } from 'rxjs/operators';
+import { pipe } from 'rxjs';
 
 /**
  * create store which can be later passed eg. to React provider
  *
  * @public
  * @param store
- * @param middlewares
  */
-export const createStore = (store, ...middlewares) => {
+export const createStore = store => {
   const storeKeys = Object.keys(store);
-
-  const subscribers = {
-    [ROOT_SUBSCRIBERS_KEY]: []
-  };
+  const subject = new Subject();
 
   let proxyStore = null;
 
-  /**
-   * adds subscriber to chanel, if it needed create chanel
-   *
-   * @param storeKey
-   * @param subscriber
-   */
-  const addSubscriberAndOrCreateSubscribeChanel = (storeKey, subscriber = null) => {
-    if (!(storeKey in subscribers))
-      subscribers[storeKey] = [];
+  const subscribe = (select = []) => subscriber => {
+    const __subject = !select.length
+      ? subject
+      : subject.pipe( filter(x => select.indexOf(x.storeName) > -1) );
 
-    if (subscriber)
-      subscribers[storeKey].push(subscriber);
-  };
-
-  /**
-   * subscribe to chanel. Can be used with es6+ decorator (@) syntax
-   *
-   * @param storeKeys {array<string>}
-   * @returns {function(*=)}
-   */
-  const subscribe = (storeKeys = []) => subscriber => {
-    if (storeKeys.length)
-      storeKeys.forEach(storeKey => addSubscriberAndOrCreateSubscribeChanel(storeKey, subscriber));
-    else
-      addSubscriberAndOrCreateSubscribeChanel(ROOT_SUBSCRIBERS_KEY, subscriber)
-  };
-
-  /**
-   * runs subscribers for one chanel
-   *
-   * @private
-   */
-  const runSubscribers = (storeObjectKey, newStore) => {
-    const subscribersToRun = subscribers[storeObjectKey];
-
-    if (subscribersToRun && subscribersToRun.length)
-      subscribersToRun.forEach(subscriber => subscriber(newStore))
-  };
-
-  /**
-   * runs subscribers for root chanel (all store changes)
-   *
-   * @param args
-   */
-  const runRootSubscribers = (...args) => {
-    subscribers[ROOT_SUBSCRIBERS_KEY].forEach(subscriber => subscriber(...args));
+    return __subject.subscribe(subscriber);
   };
 
   proxyStore = storeKeys
@@ -75,22 +33,13 @@ export const createStore = (store, ...middlewares) => {
             return true;
           }
 
-          const newProxyStore = {
-            ...proxyStore,
-            [storeObjectKey]: {
-              proxy: proxyStore[storeObjectKey].proxy,
-              target: currentTarget,
-              newTarget: {
-                ...currentTarget,
-                [key]: value
-              }
-            }
-          };
+          subject.next({
+            storeName: storeObjectKey,
+            key,
+            value,
+            oldValue: currentTarget[key]
+          });
 
-          runSubscribers(storeObjectKey, newProxyStore);
-          runRootSubscribers(newProxyStore);
-
-          proxyStore = newProxyStore;
           currentTarget[key] = value;
 
           return true;
@@ -100,8 +49,7 @@ export const createStore = (store, ...middlewares) => {
       return {
         [storeObjectKey]: {
           proxy: new Proxy(target, proxyDefinition),
-          target,
-          newTarget: {...target}
+          target
         }
       }
     })
@@ -112,18 +60,11 @@ export const createStore = (store, ...middlewares) => {
 
   return {
     __store: proxyStore,
+    subscribe,
     get store() {
       return storeKeys
-        .map(storeKey => {
-          return {
-            [storeKey]: proxyStore[storeKey].proxy
-          }
-        })
-        .reduce((acc, value) => ({
-          ...acc,
-          ...value
-        }), {});
-    },
-    subscribe
+        .map(storeKey => ({ [storeKey]: proxyStore[storeKey].proxy }))
+        .reduce((acc, value) => ({ ...acc, ...value }), {});
+    }
   }
 };

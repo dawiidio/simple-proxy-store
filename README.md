@@ -21,6 +21,16 @@ connection for React.
 
 ### Samples
 
+info object looks like: 
+```js
+{
+  storeName, // {string} with store key
+  key, // {string} key indicate which value changed
+  value, // {any} new value
+  oldValue, // {any} old value
+}
+```
+
 Basic use cases
 ```js
 import {
@@ -43,8 +53,8 @@ const myStore = createStore({
   }
 });
 
-myStore.subscribe()((...args) => {
-  console.log(args);
+myStore.subscribe()((info) => {
+  console.log(info);
 });
 ```
 
@@ -69,23 +79,34 @@ class B {
     }
     
     async fetchData() {
-      this.data = await fetch('data.json'); // async works perfect!
+      this.data = await fetch('data-b.json'); // async works perfect!
+    }
+}
+
+class C {
+    constructor(){
+        this.data = null; 
+    }
+    
+    async fetchData() {
+      this.data = await fetch('data-c.json'); // async works perfect!
     }
 }
 
 const {subscribe, store} = createStore({
   a: new A(),
-  b: new B()
+  b: new B(),
+  c: new C(),
 });
 
 // subscribe all changes
-subscribe()((...args) => {
-  console.log(args);
+subscribe()(info => {
+  console.log(info);
 });
 
 // subscribe only 'a' store
-subscribe(['a'])((key, value, oldValue) => {
-  console.log(`in store a value under key:${key} has changed from ${value} to ${oldValue}`);
+subscribe(['a'])((info) => {
+  compareOldWithNewStore(info)
 });
 
 store.a.setA();
